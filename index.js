@@ -70,7 +70,7 @@ function makeWave(length, sampleRate) {
   var waveLength = Math.floor(sampleRate * length)
   var wave = new Array(waveLength).fill(0)
 
-  wave[1] = 1 // impulse
+  wave[0] = 1 // impulse
 
   // var delay = new Delay(sampleRate, 0.073)
   // var delay = new LPComb(sampleRate, 0.033, 0.2, 0.84)
