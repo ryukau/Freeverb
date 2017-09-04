@@ -7,11 +7,9 @@ class Delay {
   }
 
   set time(value) {
-    this.rptr = this.mod(this.wptr - this.sampleRate * value, this.buf.length)
-  }
-
-  interp(a, b, ratio) {
-    return a + ratio * (b - a)
+    var rptr = this.mod(this.wptr - this.sampleRate * value, this.buf.length)
+    this.fraction = rptr % 1
+    this.rptr = Math.floor(rptr)
   }
 
   mod(n, m) {
@@ -22,14 +20,65 @@ class Delay {
     this.buf[this.wptr] = input
     this.wptr = (this.wptr + 1) % this.buf.length
 
-    var ratio = this.rptr % 1
-    var rptr = Math.floor(this.rptr)
+    var rptr = this.rptr
     this.rptr = (this.rptr + 1) % this.buf.length
-    var output = this.interp(
-      this.buf[rptr],
-      this.buf[Math.floor(this.rptr)],
-      ratio
+    return this.buf[rptr]
+      + this.fraction * (this.buf[this.rptr] - this.buf[rptr])
+  }
+}
+
+class DelayS {
+  // Windowed sinc interpolated delay.
+  constructor(sampleRate, time) {
+    this.halfWinLength = 16
+    this.sampleRate = sampleRate
+    this.buf = new Array(sampleRate * 5).fill(0)
+    this.wptr = 0
+    this.time = time
+  }
+
+  set time(value) {
+    var rptr = this.mod(
+      this.wptr - this.sampleRate * value - this.halfWinLength,
+      this.buf.length
     )
+    this.fraction = rptr % 1
+    this.rptr = Math.floor(rptr)
+    this.makeWindow()
+  }
+
+  makeWindow(fraction) {
+    // HannWindow * sinc.
+    this.win = new Array(this.halfWinLength * 2).fill(0)
+    var length = this.win.length - 1
+    for (var i = 0; i < this.win.length; ++i) {
+      this.win[i] = Math.sin(Math.PI * i / length)
+      this.win[i] *= this.win[i]
+      this.win[i] *= this.sinc(this.fraction + i - this.halfWinLength)
+    }
+    return this.win
+  }
+
+  sinc(x) {
+    var a = Math.PI * x
+    return (a === 0) ? 1 : Math.sin(a) / a
+  }
+
+  mod(n, m) {
+    return ((n % m) + m) % m
+  }
+
+  process(input) {
+    this.buf[this.wptr] = input
+    this.wptr = (this.wptr + 1) % this.buf.length
+
+    var rptr = this.rptr
+    var output = 0
+    for (var i = 0; i < this.win.length; ++i) {
+      output += this.buf[rptr] * this.win[i]
+      rptr = (rptr + 1) % this.buf.length
+    }
+    this.rptr = (this.rptr + 1) % this.buf.length
     return output
   }
 }
@@ -141,7 +190,7 @@ class Freeverb {
     var times = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617]
     times = times.map(value => value / fixedRate)
     for (var i = 0; i < times.length; ++i) {
-      this.lpcomb.push(new LPComb(sampleRate, times[i], 0.3, 0.94))
+      this.lpcomb.push(new LPComb(sampleRate, times[i], 0.14, 0.99))
     }
 
     var params = [
