@@ -1,3 +1,26 @@
+class Impulse {
+  // band limited impulse.
+  // length はサンプル数。
+  constructor(length) {
+    this.length = length
+  }
+
+  set length(value) {
+    this.P = Math.floor(value)
+    this.piPerP = Math.PI / this.P
+    var M = (value % 2 === 0) ? value - 1 : value
+    this.mPiPerP = M * this.piPerP
+  }
+
+  // oscillate(0) === 1
+  oscillate(n) {
+    var A = Math.sin(this.piPerP * n)
+    if (A === 0) { return 1 }
+    var B = Math.sin(this.mPiPerP * n) / (A * this.P)
+    return Math.max(-1, Math.min(B, 1))
+  }
+}
+
 class Delay {
   constructor(sampleRate, time) {
     this.sampleRate = sampleRate
