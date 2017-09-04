@@ -133,7 +133,7 @@ var checkboxQuickSave = new Checkbox(divRenderControls.element, "QuickSave",
 var divMiscControls = new Div(divMain.element, "MiscControls")
 var headingRender = new Heading(divMiscControls.element, 6, "Render Settings")
 var inputLength = new NumberInput(divMiscControls.element, "Length",
-  0.2, 0.02, 1, 0.02, (value) => { refresh() })
+  0.2, 0.02, 8, 0.02, (value) => { refresh() })
 var tenMilliSecond = audioContext.sampleRate / 100
 var inputDeclickIn = new NumberInput(divMiscControls.element, "Declick In",
   0, 0, tenMilliSecond, 1, refresh)
