@@ -137,17 +137,18 @@ class Freeverb {
   constructor(sampleRate) {
     this.lpcomb = []
 
+    var fixedRate = 25000
     var times = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617]
-    times = times.map(value => value / 25000)
+    times = times.map(value => value / fixedRate)
     for (var i = 0; i < times.length; ++i) {
-      this.lpcomb.push(new LPComb(sampleRate, times[i], 0.2, 0.84))
+      this.lpcomb.push(new LPComb(sampleRate, times[i], 0.3, 0.94))
     }
 
     var params = [
-      { time: 225, gain: 0.5 },
-      { time: 556, gain: 0.5 },
-      { time: 441, gain: 0.5 },
-      { time: 341, gain: 0.5 }
+      { time: 225 / fixedRate, gain: 0.5 },
+      { time: 556 / fixedRate, gain: 0.5 },
+      { time: 441 / fixedRate, gain: 0.5 },
+      { time: 341 / fixedRate, gain: 0.5 }
     ]
     this.allpass = new SerialAllpass(sampleRate, params)
   }
