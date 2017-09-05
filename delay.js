@@ -166,10 +166,6 @@ class LPComb {
     this.delay.time = value
   }
 
-  set feedback(value) {
-    this._feedback = Math.max(0, Math.min(value, 1))
-  }
-
   process(input) {
     var gain = this.roomsize * (1 - this.damp) / (1 - this.damp * this.x)
     this.x = input
@@ -191,9 +187,16 @@ class SerialAllpass {
   }
 
   set params(params) {
-    for (var i = 0; i < params.length; ++i) {
+    for (var i = 0; i < this.allpass.length; ++i) {
       this.allpass[i].time = params[i].time
       this.allpass[i].gain = params[i].gain
+    }
+  }
+
+  randomTime(min, max) {
+    var range = max - min
+    for (var i = 0; i < this.allpass.length; ++i) {
+      this.allpass[i].time = Math.random() * range + min
     }
   }
 
@@ -211,6 +214,8 @@ class Freeverb {
 
     var fixedRate = 25000
     var times = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617]
+    // [0.04464, 0.04752, 0.05108, 0.05424, 0.05688, 0.05964, 0.06228, 0.06468]
+    // Math.random() * 0.03 + 0.04
     times = times.map(value => value / fixedRate)
     for (var i = 0; i < times.length; ++i) {
       this.lpcomb.push(new LPComb(sampleRate, times[i], 0.14, 0.99))
@@ -223,6 +228,13 @@ class Freeverb {
       { time: 341 / fixedRate, gain: 0.5 }
     ]
     this.allpass = new SerialAllpass(sampleRate, params)
+  }
+
+  random() {
+    for (var i = 0; i < this.lpcomb.length; ++i) {
+      this.lpcomb[i].time = Math.random() * 0.03 + 0.04
+    }
+    this.allpass.randomTime(0.005, 0.025)
   }
 
   process(input) {
@@ -249,7 +261,7 @@ class ParallelComb {
   }
 
   set params(params) {
-    for (var i = 0; i < params.length; ++i) {
+    for (var i = 0; i < this.comb.length; ++i) {
       this.comb[i].time = params[i].time
       this.comb[i].gain = params[i].gain
       this.comb[i].feedback = params[i].feedback
