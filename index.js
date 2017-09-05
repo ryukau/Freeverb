@@ -75,6 +75,7 @@ function makeWave(length, sampleRate) {
   // var delay = new Delay(sampleRate, 0.073)
   // var delay = new LPComb(sampleRate, 0.033, 0.2, 0.84)
   var delay = new Freeverb(sampleRate)
+  delay.random()
   for (var t = 0; t < wave.length; ++t) {
     wave[t] = delay.process(wave[t])
   }
@@ -83,12 +84,20 @@ function makeWave(length, sampleRate) {
 }
 
 function refresh() {
-  var raw = makeWave(inputLength.value, renderParameters.sampleRate)
+  var rawLeft = makeWave(inputLength.value, renderParameters.sampleRate)
+  var rawRight = makeWave(inputLength.value, renderParameters.sampleRate)
+
   if (checkboxResample.value) {
-    wave.left = Resampler.pass(raw, renderParameters.sampleRate, audioContext.sampleRate)
+    wave.left = Resampler.pass(
+      rawLeft, renderParameters.sampleRate, audioContext.sampleRate)
+    wave.right = Resampler.pass(
+      rawRight, renderParameters.sampleRate, audioContext.sampleRate)
   }
   else {
-    wave.left = Resampler.reduce(raw, renderParameters.sampleRate, audioContext.sampleRate)
+    wave.left = Resampler.reduce(
+      rawLeft, renderParameters.sampleRate, audioContext.sampleRate)
+    wave.right = Resampler.reduce(
+      rawRight, renderParameters.sampleRate, audioContext.sampleRate)
   }
   wave.declick(inputDeclickIn.value, inputDeclickOut.value)
   if (checkboxNormalize.value) {
@@ -105,7 +114,7 @@ var audioContext = new AudioContext()
 var renderParameters = new RenderParameters(audioContext, 1)
 // var renderParameters = new RenderParameters(audioContext, 16)
 
-var wave = new Wave(1)
+var wave = new Wave(2)
 
 var divMain = new Div(document.body, "main")
 var headingTitle = new Heading(divMain.element, 1, document.title)
