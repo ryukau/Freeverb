@@ -206,40 +206,59 @@ class SerialAllpass {
     }
     return input
   }
+
+  processMix(input, step) {
+    // 途中から取り出すのもあり。
+    var mix = 0
+    var halfStep = Math.floor(step / 2)
+    for (var i = 0; i < this.allpass.length; ++i) {
+      input = this.allpass[i].process(input)
+      if (i % step === halfStep) {
+        mix += input
+      }
+    }
+    return input + mix / 3
+  }
 }
 
 class Freeverb {
-  constructor(sampleRate, damp, roomsize) {
+  constructor(
+    sampleRate,
+    damp,
+    roomsize,
+    combLength,
+    allpassLength,
+    allpassGain,
+    allpassRandomMultiplier
+  ) {
     this.lpcomb = []
     this.damp = damp
     this.roomsize = roomsize
+    this.allpassRandomMultiplier = allpassRandomMultiplier
+    this.allpassStep = allpassLength
 
-    var fixedRate = 25000
-    var times = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617]
-    // [0.04464, 0.04752, 0.05108, 0.05424, 0.05688, 0.05964, 0.06228, 0.06468]
-    // Math.random() * 0.03 + 0.04
-    times = times.map(value => value / fixedRate)
-    for (var i = 0; i < times.length; ++i) {
+    for (var i = 0; i < combLength; ++i) {
       this.lpcomb.push(new LPComb(
         sampleRate,
-        times[i],
+        Math.random() * this.allpassRandomMultiplier + 0.04,
         this.damp,
         this.roomsize
       ))
     }
 
-    var params = [
-      { time: 225 / fixedRate, gain: 0.5 },
-      { time: 556 / fixedRate, gain: 0.5 },
-      { time: 441 / fixedRate, gain: 0.5 },
-      { time: 341 / fixedRate, gain: 0.5 }
-    ]
+    var params = []
+    for (var i = 0; i < allpassLength; ++i) {
+      params.push({
+        time: Math.random(),
+        gain: allpassGain//0.25 + Math.random() * 0.25
+      })
+    }
     this.allpass = new SerialAllpass(sampleRate, params)
   }
 
   random(rnd) {
     for (var i = 0; i < this.lpcomb.length; ++i) {
-      this.lpcomb[i].time = rnd.random() * 0.03 + 0.04
+      this.lpcomb[i].time = rnd.random() * this.allpassRandomMultiplier + 0.04
     }
     this.allpass.randomTime(0.005, 0.025, rnd)
   }
@@ -249,7 +268,8 @@ class Freeverb {
     for (var i = 0; i < this.lpcomb.length; ++i) {
       output += this.lpcomb[i].process(input)
     }
-    return this.allpass.process(output)
+    // return this.allpass.process(output)
+    return this.allpass.processMix(output, this.allpassStep)
   }
 }
 

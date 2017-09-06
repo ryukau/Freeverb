@@ -74,16 +74,36 @@ function makeWave(length, sampleRate, channel) {
     wave[ch][0] = 1 // impulse
   }
 
-  var freeverb = new Freeverb(
+  var freeverb = []
+  freeverb.push(new Freeverb(
     sampleRate,
     inputDamp.value,
-    inputRoomsize.value
-  )
+    inputRoomsize.value,
+    8,
+    32,
+    0.25,
+    0.03
+  ))
+  // freeverb.push(new Freeverb(
+  //   sampleRate,
+  //   inputDamp.value / 2,
+  //   inputRoomsize.value,
+  //   16,
+  //   16,
+  //   0.5,
+  //   0.04
+  // ))
   var rnd = new Rnd(inputSeed.value)
   for (var ch = 0; ch < wave.length; ++ch) {
-    freeverb.random(rnd)
+    for (var i = 0; i < freeverb.length; ++i) {
+      freeverb[i].random(rnd)
+    }
     for (var t = 0; t < wave[ch].length; ++t) {
-      wave[ch][t] = freeverb.process(wave[ch][t])
+      var input = wave[ch][t]
+      wave[ch][t] = freeverb[0].process(input)
+      for (var i = 1; i < freeverb.length; ++i) {
+        wave[ch][t] += freeverb[i].process(input)
+      }
     }
   }
 
@@ -107,6 +127,9 @@ function refresh() {
     wave.data = makeWave(inputLength.value, audioContext.sampleRate, channel)
   }
 
+  if (checkboxTrim.value) {
+    wave.trim()
+  }
   wave.declick(inputDeclickIn.value, inputDeclickOut.value)
   if (checkboxNormalize.value) {
     wave.normalize()
@@ -157,12 +180,14 @@ var inputDeclickOut = new NumberInput(divMiscControls.element, "Declick Out",
 var checkboxNormalize = new Checkbox(divMiscControls.element, "Normalize",
   true, refresh)
 var checkboxResample = new Checkbox(divMiscControls.element, "16x Sampling",
-  true, (checked) => {
+  false, (checked) => {
     renderParameters.overSampling = checked ? 16 : 1
     refresh()
     play(audioContext, wave)
   }
 )
+var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
+  false, refresh)
 
 var inputDamp = new NumberInput(divMiscControls.element, "Damp",
   0.2, 0, 1, 0.001, refresh)
