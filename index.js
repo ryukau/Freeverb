@@ -65,7 +65,7 @@ function save(wave) {
   }, 100)
 }
 
-// length is time in seconds.
+// length is seconds.
 function makeWave(length, sampleRate, channel) {
   var waveLength = Math.floor(sampleRate * length)
   var wave = []
@@ -74,8 +74,6 @@ function makeWave(length, sampleRate, channel) {
     wave[ch][0] = 1 // impulse
   }
 
-  // var delay = new Delay(sampleRate, 0.073)
-  // var delay = new LPComb(sampleRate, 0.033, 0.2, 0.84)
   var freeverb = new Freeverb(
     sampleRate,
     inputDamp.value,
