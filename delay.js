@@ -193,10 +193,10 @@ class SerialAllpass {
     }
   }
 
-  randomTime(min, max) {
+  randomTime(min, max, rnd) {
     var range = max - min
     for (var i = 0; i < this.allpass.length; ++i) {
-      this.allpass[i].time = Math.random() * range + min
+      this.allpass[i].time = rnd.random() * range + min
     }
   }
 
@@ -209,8 +209,10 @@ class SerialAllpass {
 }
 
 class Freeverb {
-  constructor(sampleRate) {
+  constructor(sampleRate, damp, roomsize) {
     this.lpcomb = []
+    this.damp = damp
+    this.roomsize = roomsize
 
     var fixedRate = 25000
     var times = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617]
@@ -218,7 +220,12 @@ class Freeverb {
     // Math.random() * 0.03 + 0.04
     times = times.map(value => value / fixedRate)
     for (var i = 0; i < times.length; ++i) {
-      this.lpcomb.push(new LPComb(sampleRate, times[i], 0.14, 0.99))
+      this.lpcomb.push(new LPComb(
+        sampleRate,
+        times[i],
+        this.damp,
+        this.roomsize
+      ))
     }
 
     var params = [
@@ -230,11 +237,11 @@ class Freeverb {
     this.allpass = new SerialAllpass(sampleRate, params)
   }
 
-  random() {
+  random(rnd) {
     for (var i = 0; i < this.lpcomb.length; ++i) {
-      this.lpcomb[i].time = Math.random() * 0.03 + 0.04
+      this.lpcomb[i].time = rnd.random() * 0.03 + 0.04
     }
-    this.allpass.randomTime(0.005, 0.025)
+    this.allpass.randomTime(0.005, 0.025, rnd)
   }
 
   process(input) {

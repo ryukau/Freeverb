@@ -66,7 +66,7 @@ function save(wave) {
 }
 
 // length is time in seconds.
-function makeWave(length, sampleRate) {
+function makeWave(length, sampleRate, rnd) {
   var waveLength = Math.floor(sampleRate * length)
   var wave = new Array(waveLength).fill(0)
 
@@ -74,18 +74,24 @@ function makeWave(length, sampleRate) {
 
   // var delay = new Delay(sampleRate, 0.073)
   // var delay = new LPComb(sampleRate, 0.033, 0.2, 0.84)
-  var delay = new Freeverb(sampleRate)
-  delay.random()
+  var freeverb = new Freeverb(
+    sampleRate,
+    inputDamp.value,
+    inputRoomsize.value
+  )
+  freeverb.random(rnd)
   for (var t = 0; t < wave.length; ++t) {
-    wave[t] = delay.process(wave[t])
+    wave[t] = freeverb.process(wave[t])
   }
 
   return wave
 }
 
 function refresh() {
-  var rawLeft = makeWave(inputLength.value, renderParameters.sampleRate)
-  var rawRight = makeWave(inputLength.value, renderParameters.sampleRate)
+  var rnd = new Rnd(inputSeed.value)
+
+  var rawLeft = makeWave(inputLength.value, renderParameters.sampleRate, rnd)
+  var rawRight = makeWave(inputLength.value, renderParameters.sampleRate, rnd)
 
   if (checkboxResample.value) {
     wave.left = Resampler.pass(
@@ -151,12 +157,19 @@ var inputDeclickOut = new NumberInput(divMiscControls.element, "Declick Out",
 var checkboxNormalize = new Checkbox(divMiscControls.element, "Normalize",
   true, refresh)
 var checkboxResample = new Checkbox(divMiscControls.element, "16x Sampling",
-  false, (checked) => {
+  true, (checked) => {
     renderParameters.overSampling = checked ? 16 : 1
     refresh()
     play(audioContext, wave)
   }
 )
+
+var inputDamp = new NumberInput(divMiscControls.element, "Damp",
+  0.2, 0, 1, 0.001, refresh)
+var inputRoomsize = new NumberInput(divMiscControls.element, "Roomsize",
+  0.84, 0, 1, 0.001, refresh)
+var inputSeed = new NumberInput(divMiscControls.element, "Seed",
+  0, 0, 65535, 1, refresh)
 
 refresh()
 
