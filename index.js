@@ -118,8 +118,7 @@ function refresh() {
 //-- UI.
 
 var audioContext = new AudioContext()
-var renderParameters = new RenderParameters(audioContext, 1)
-// var renderParameters = new RenderParameters(audioContext, 16)
+var renderParameters = new RenderParameters(audioContext, 16)
 
 var wave = new Wave(2)
 
