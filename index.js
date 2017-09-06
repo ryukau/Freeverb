@@ -79,20 +79,15 @@ function makeWave(length, sampleRate, channel) {
     sampleRate,
     inputDamp.value,
     inputRoomsize.value,
-    8,
-    32,
-    0.25,
-    0.03
+    inputCombLength.value,
+    inputCombDelayMin.value,
+    inputCombDelayRange.value,
+    inputAllpassLength.value,
+    inputAllpassGain.value,
+    inputAllpassDelayMin.value,
+    inputAllpassDelayRange.value,
+    inputAllpassMixStep.value
   ))
-  // freeverb.push(new Freeverb(
-  //   sampleRate,
-  //   inputDamp.value / 2,
-  //   inputRoomsize.value,
-  //   16,
-  //   16,
-  //   0.5,
-  //   0.04
-  // ))
   var rnd = new Rnd(inputSeed.value)
   for (var ch = 0; ch < wave.length; ++ch) {
     for (var i = 0; i < freeverb.length; ++i) {
@@ -137,6 +132,21 @@ function refresh() {
   waveView.set(wave.left)
 }
 
+function random() {
+  inputDamp.random()
+  inputRoomsize.random()
+  inputCombLength.random()
+  inputCombDelayMin.random()
+  inputCombDelayRange.random()
+  inputAllpassLength.random()
+  inputAllpassGain.random()
+  inputAllpassDelayMin.random()
+  inputAllpassDelayRange.random()
+  inputAllpassMixStep.random()
+  inputSeed.random()
+  refresh()
+}
+
 
 //-- UI.
 
@@ -174,7 +184,7 @@ var inputLength = new NumberInput(divMiscControls.element, "Length",
   2, 0.02, 8, 0.02, (value) => { refresh() })
 var tenMilliSecond = audioContext.sampleRate / 100
 var inputDeclickIn = new NumberInput(divMiscControls.element, "Declick In",
-  0, 0, tenMilliSecond, 1, refresh)
+  2, 0, tenMilliSecond, 1, refresh)
 var inputDeclickOut = new NumberInput(divMiscControls.element, "Declick Out",
   Math.floor(tenMilliSecond / 10), 0, tenMilliSecond, 1, refresh)
 var checkboxNormalize = new Checkbox(divMiscControls.element, "Normalize",
@@ -193,6 +203,22 @@ var inputDamp = new NumberInput(divMiscControls.element, "Damp",
   0.2, 0, 1, 0.001, refresh)
 var inputRoomsize = new NumberInput(divMiscControls.element, "Roomsize",
   0.84, 0, 1, 0.001, refresh)
+var inputCombLength = new NumberInput(divMiscControls.element, "Comb",
+  8, 1, 256, 1, refresh)
+var inputCombDelayMin = new NumberInput(divMiscControls.element, "CombMin",
+  0.005, 0.0001, 0.1, 0.0001, refresh)
+var inputCombDelayRange = new NumberInput(divMiscControls.element, "CombRange",
+  0.025, 0.0001, 0.1, 0.0001, refresh)
+var inputAllpassLength = new NumberInput(divMiscControls.element, "Allpass",
+  4, 1, 256, 1, refresh)
+var inputAllpassGain = new NumberInput(divMiscControls.element, "AllpassGain",
+  0.5, 0.01, 1, 0.01, refresh)
+var inputAllpassDelayMin = new NumberInput(divMiscControls.element, "AllpassMin",
+  0.04, 0.0001, 0.1, 0.0001, refresh)
+var inputAllpassDelayRange = new NumberInput(divMiscControls.element, "AllpassRange",
+  0.03, 0.0001, 0.1, 0.0001, refresh)
+var inputAllpassMixStep = new NumberInput(divMiscControls.element, "AllpassMixStep",
+  0, 0, 16, 1, refresh)
 var inputSeed = new NumberInput(divMiscControls.element, "Seed",
   0, 0, 65535, 1, refresh)
 
