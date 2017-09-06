@@ -66,11 +66,13 @@ function save(wave) {
 }
 
 // length is time in seconds.
-function makeWave(length, sampleRate, rnd) {
+function makeWave(length, sampleRate, channel) {
   var waveLength = Math.floor(sampleRate * length)
-  var wave = new Array(waveLength).fill(0)
-
-  wave[0] = 1 // impulse
+  var wave = []
+  for (var ch = 0; ch < channel; ++ch) {
+    wave.push(new Array(waveLength).fill(0))
+    wave[ch][0] = 1 // impulse
+  }
 
   // var delay = new Delay(sampleRate, 0.073)
   // var delay = new LPComb(sampleRate, 0.033, 0.2, 0.84)
@@ -79,37 +81,38 @@ function makeWave(length, sampleRate, rnd) {
     inputDamp.value,
     inputRoomsize.value
   )
-  freeverb.random(rnd)
-  for (var t = 0; t < wave.length; ++t) {
-    wave[t] = freeverb.process(wave[t])
+  var rnd = new Rnd(inputSeed.value)
+  for (var ch = 0; ch < wave.length; ++ch) {
+    freeverb.random(rnd)
+    for (var t = 0; t < wave[ch].length; ++t) {
+      wave[ch][t] = freeverb.process(wave[ch][t])
+    }
   }
 
   return wave
 }
 
 function refresh() {
-  var rnd = new Rnd(inputSeed.value)
-
-  var rawLeft = makeWave(inputLength.value, renderParameters.sampleRate, rnd)
-  var rawRight = makeWave(inputLength.value, renderParameters.sampleRate, rnd)
+  var channel = 2
 
   if (checkboxResample.value) {
-    wave.left = Resampler.pass(
-      rawLeft, renderParameters.sampleRate, audioContext.sampleRate)
-    wave.right = Resampler.pass(
-      rawRight, renderParameters.sampleRate, audioContext.sampleRate)
+    var raw = makeWave(inputLength.value, renderParameters.sampleRate, channel)
+    for (var ch = 0; ch < raw.length; ++ch) {
+      wave.data[ch] = Resampler.pass(
+        raw[ch],
+        renderParameters.sampleRate,
+        audioContext.sampleRate
+      )
+    }
   }
   else {
-    wave.left = Resampler.reduce(
-      rawLeft, renderParameters.sampleRate, audioContext.sampleRate)
-    wave.right = Resampler.reduce(
-      rawRight, renderParameters.sampleRate, audioContext.sampleRate)
+    wave.data = makeWave(inputLength.value, audioContext.sampleRate, channel)
   }
+
   wave.declick(inputDeclickIn.value, inputDeclickOut.value)
   if (checkboxNormalize.value) {
     wave.normalize()
   }
-
   waveView.set(wave.left)
 }
 
