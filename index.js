@@ -66,6 +66,7 @@ function save(wave) {
 }
 
 function makeWave() {
+  headingRenderStatus.element.textContent = "⚠ Rendering ⚠"
   for (var ch = 0; ch < wave.channels; ++ch) {
     if (workers[ch].isRunning) {
       workers[ch].worker.terminate()
@@ -108,6 +109,7 @@ function makeWave() {
           wave.normalize()
         }
         waveView.set(wave)
+        headingRenderStatus.element.textContent = "Rendering finished. ✓"
       }
     }
   })
@@ -169,13 +171,23 @@ var divMain = new Div(document.body, "main")
 var headingTitle = new Heading(divMain.element, 1, document.title)
 
 var description = new Description(divMain.element)
-description.add("", "")
+description.add("基本操作", "Playボタンでインパルス応答が再生されます。")
+description.add("", "値を変更するかRandomボタンを押すとインパルス応答がレンダリングされます。")
+description.add("", "Saveボタンで気に入ったインパルス応答を保存できます。")
+description.add("注意点", "以下の値を有効あるいは大きくするとレンダリング時間が長くなるので注意してください。")
+description.add("", "- Length")
+description.add("", "- 16x Sampling")
+description.add("", "- ER.Taps")
+description.add("", "- Comb")
+description.add("", "- Allpass")
 
 var divWaveform = new Div(divMain.element, "waveform")
 var headingWaveform = new Heading(divWaveform.element, 6, "Waveform")
 var waveView = new WaveViewMulti(divWaveform.element, wave.channels)
 
 var divRenderControls = new Div(divMain.element, "renderControls")
+var headingRenderStatus = new Heading(divRenderControls.element, 4,
+  "Rendering status will be displayed here.")
 var buttonPlay = new Button(divRenderControls.element, "Play",
   () => play(audioContext, wave))
 var buttonSave = new Button(divRenderControls.element, "Save",
