@@ -5,7 +5,7 @@ importScripts(
 )
 
 // params = {
-//   length
+//   length,
 //   sampleRate,
 //   overSampling,
 //   damp,
