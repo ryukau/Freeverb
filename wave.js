@@ -10,6 +10,10 @@ class Wave {
     return this.data[0].length
   }
 
+  get channels() {
+    return this.data.length
+  }
+
   get left() {
     return this.data[0]
   }
@@ -20,10 +24,6 @@ class Wave {
 
   get right() {
     return this.data[1]
-  }
-
-  get channels() {
-    return this.data.length
   }
 
   set right(data) {
