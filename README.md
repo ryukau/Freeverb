@@ -1,6 +1,8 @@
 # Freeverb
 
-[Freeverb](https://ccrma.stanford.edu/~jos/pasp/Freeverb.html)です。
+https://ryukau.github.io/Freeverb/
+
+ブラウザ上で[Freeverb](https://ccrma.stanford.edu/~jos/pasp/Freeverb.html)のインパルス応答をレンダリングします。
 
 ## 使い方
 
