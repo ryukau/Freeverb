@@ -75,8 +75,7 @@ function makeWave(length, sampleRate, channel) {
   }
 
   // impulse -> *** early reflection *** -> freeverb。
-  var freeverb = []
-  freeverb.push(new Freeverb(
+  var freeverb = new Freeverb(
     sampleRate,
     inputDamp.value,
     inputRoomsize.value,
@@ -88,7 +87,7 @@ function makeWave(length, sampleRate, channel) {
     inputAllpassDelayMin.value,
     inputAllpassDelayRange.value,
     inputAllpassMixStep.value
-  ))
+  )
   var earlyReflection = new EarlyReflection(
     sampleRate,
     inputERTaps.value,
@@ -98,18 +97,14 @@ function makeWave(length, sampleRate, channel) {
   for (var ch = 0; ch < wave.length; ++ch) {
     earlyReflection.random(rnd)
     earlyReflection.clearBuffer()
-    for (var i = 0; i < freeverb.length; ++i) {
-      freeverb[i].random(rnd)
-      freeverb[i].clearBuffer()
+    freeverb.random(rnd)
+    freeverb.clearBuffer()
+    for (var t = 0; t < sampleRate; ++t) {
+      wave[ch][t] = earlyReflection.process(wave[ch][t])
     }
     for (var t = 0; t < wave[ch].length; ++t) {
-      // wave[ch][t] = earlyReflection.process(wave[ch][t])
-      // var input = wave[ch][t]
-      var input = earlyReflection.process(wave[ch][t])
-      wave[ch][t] = freeverb[0].process(input)
-      for (var i = 1; i < freeverb.length; ++i) {
-        wave[ch][t] += freeverb[i].process(input)
-      }
+      var reverb = freeverb.process(wave[ch][t])
+      wave[ch][t] = reverb + inputERRatio.value * (wave[ch][t] - reverb)
     }
   }
 
@@ -169,7 +164,9 @@ function random() {
   inputAllpassDelayMin.random()
   inputAllpassDelayRange.random()
   inputAllpassMixStep.random()
+  inputERRatio.random()
   inputERTaps.random()
+  inputERRange.random()
   inputSeed.random()
   refresh()
 }
@@ -228,10 +225,12 @@ var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
 
 var divReverbControls = new Div(divMain.element, "MiscControls")
 var headingRender = new Heading(divReverbControls.element, 6, "Reverb")
+var inputERRatio = new NumberInput(divReverbControls.element,
+  "ER.Ratio", 2 / 3, 0, 1, 0.001, refresh)
 var inputERTaps = new NumberInput(divReverbControls.element,
   "ER.Taps", 16, 0, 128, 1, refresh)
 var inputERRange = new NumberInput(divReverbControls.element,
-  "ER.Range", 0.002, 0.001, 0.1, 0.001, refresh)
+  "ER.Range", 0.002, 0.0001, 0.01, 0.0001, refresh)
 var inputDamp = new NumberInput(divReverbControls.element,
   "Damp", 0.2, 0, 0.999, 0.001, refresh)
 var inputRoomsize = new NumberInput(divReverbControls.element,
