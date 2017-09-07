@@ -245,7 +245,7 @@ var inputAllpassDelayRange = new NumberInput(divReverbControls.element,
 var inputAllpassMixStep = new NumberInput(divReverbControls.element,
   "AllpassMixStep", 0, 0, 16, 1, refresh)
 var inputSeed = new NumberInput(divReverbControls.element,
-  "Seed", 0, 0, 65535, 1, refresh)
+  "Seed", 0, 0, Math.floor(Number.MAX_SAFE_INTEGER / 2), 1, refresh)
 
 refresh()
 
