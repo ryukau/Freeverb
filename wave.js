@@ -84,11 +84,12 @@ class Wave {
         return
       }
       this.peakValue = peak.value
+      peakValue = this.peakValue
     }
 
     for (var i = 0; i < this.data.length; ++i) {
       for (var j = 0; j < this.data[i].length; ++j) {
-        this.data[i][j] /= this.peakValue
+        this.data[i][j] /= peakValue
       }
     }
   }
