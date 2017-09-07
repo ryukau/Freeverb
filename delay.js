@@ -39,6 +39,10 @@ class Delay {
     return ((n % m) + m) % m
   }
 
+  clearBuffer() {
+    this.buf.fill(0)
+  }
+
   process(input) {
     this.buf[this.wptr] = input
     this.wptr = (this.wptr + 1) % this.buf.length
@@ -91,6 +95,10 @@ class DelayS {
     return ((n % m) + m) % m
   }
 
+  clearBuffer() {
+    this.buf.fill(0)
+  }
+
   process(input) {
     this.buf[this.wptr] = input
     this.wptr = (this.wptr + 1) % this.buf.length
@@ -117,6 +125,11 @@ class Allpass {
     this.delay.time = value
   }
 
+  clearBuffer() {
+    this.delay.clearBuffer()
+    this.buf = 0
+  }
+
   process(input) {
     input += this.gain * this.buf
     var output = this.buf - this.gain * input
@@ -135,6 +148,11 @@ class Comb {
 
   set time(value) {
     this.delay.time = value
+  }
+
+  clearBuffer() {
+    this.delay.clearBuffer()
+    this.buf = 0
   }
 
   process(input) {
@@ -164,6 +182,12 @@ class LPComb {
 
   set time(value) {
     this.delay.time = value
+  }
+
+  clearBuffer() {
+    this.delay.clearBuffer()
+    this.x = 0
+    this.buf = 0
   }
 
   process(input) {
@@ -200,6 +224,10 @@ class SerialAllpass {
     }
   }
 
+  clearBuffer() {
+    this.allpass.forEach((v) => v.clearBuffer())
+  }
+
   process(input) {
     for (var i = 0; i < this.allpass.length; ++i) {
       input = this.allpass[i].process(input)
@@ -215,7 +243,7 @@ class SerialAllpass {
         mix += input
       }
     }
-    return input + mix / 3
+    return input + mix / 12
   }
 }
 
@@ -255,7 +283,7 @@ class Freeverb {
     for (var i = 0; i < apLength; ++i) {
       params.push({
         time: Math.random(),
-        gain: apGain//0.25 + Math.random() * 0.25
+        gain: apGain //0.1 + Math.random() * apGain
       })
     }
     this.allpass = new SerialAllpass(sampleRate, params)
@@ -263,9 +291,15 @@ class Freeverb {
 
   random(rnd) {
     for (var i = 0; i < this.lpcomb.length; ++i) {
-      this.lpcomb[i].time = rnd.random() * this.apDelayRange + this.apDelayMin
+      this.lpcomb[i].time = rnd.random() * this.combDelayMin
+        + this.combDelayRange
     }
-    this.allpass.randomTime(this.combDelayMin, this.combDelayRange, rnd)
+    this.allpass.randomTime(this.apDelayRange, this.apDelayMin, rnd)
+  }
+
+  clearBuffer() {
+    this.lpcomb.forEach((v) => v.clearBuffer())
+    this.allpass.clearBuffer()
   }
 
   process(input) {
@@ -277,6 +311,37 @@ class Freeverb {
       return this.allpass.process(output)
     }
     return this.allpass.processMix(output, this.apStep)
+  }
+}
+
+class EarlyReflection {
+  constructor(sampleRate, taps) {
+    this.delay = []
+    this.gain = []
+    for (var i = 0; i < taps; ++i) {
+      this.delay.push(new Delay(sampleRate, Math.random() * 0.1))
+      this.gain.push(Math.pow(Math.random(), i))
+    }
+  }
+
+  random(rnd) {
+    for (var i = 0; i < this.delay.length; ++i) {
+      this.delay[i].time = rnd.random() * 0.1
+      this.gain[i] = Math.pow(rnd.random(), i)
+    }
+  }
+
+  clearBuffer() {
+    this.delay.forEach((v) => v.clearBuffer())
+  }
+
+  process(input) {
+    var mix = input
+    for (var i = 0; i < this.delay.length; ++i) {
+      input = this.gain[i] * this.delay[i].process(input)
+      mix += input
+    }
+    return mix
   }
 }
 
