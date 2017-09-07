@@ -65,50 +65,52 @@ function save(wave) {
   }, 100)
 }
 
-// length is seconds.
-function makeWave(length, sampleRate, channel) {
-  var waveLength = Math.floor(sampleRate * length)
-  var wave = []
-  for (var ch = 0; ch < channel; ++ch) {
-    wave.push(new Array(waveLength).fill(0))
-    wave[ch][0] = 1 // impulse
+function makeWave() {
+  for (var ch = 0; ch < wave.channels; ++ch) {
+    if (workers[ch].isRunning) {
+      workers[ch].worker.terminate()
+      workers[ch].worker = new Worker("renderer.js")
+    }
+    else {
+      workers[ch].isRunning = true
+    }
+    workers[ch].worker.postMessage({
+      length: inputLength.value,
+      sampleRate: audioContext.sampleRate,
+      overSampling: checkboxResample.value ? 16 : 1,
+      damp: inputDamp.value,
+      roomsize: inputRoomsize.value,
+      combLength: inputCombLength.value,
+      combDelayMin: inputCombDelayMin.value,
+      combDelayRange: inputCombDelayRange.value,
+      allpassLength: inputAllpassLength.value,
+      allpassGain: inputAllpassGain.value,
+      allpassDelayMin: inputAllpassDelayMin.value,
+      allpassDelayRange: inputAllpassDelayRange.value,
+      allpassMixStepe: inputAllpassMixStep.value,
+      erRatio: inputERRatio.value,
+      erTaps: inputERTaps.value,
+      erRange: inputERRange.value,
+      seed: inputSeed.value + inputSeed.max * ch,
+    })
   }
 
-  // impulse -> *** early reflection *** -> freeverb。
-  var freeverb = new Freeverb(
-    sampleRate,
-    inputDamp.value,
-    inputRoomsize.value,
-    inputCombLength.value,
-    inputCombDelayMin.value,
-    inputCombDelayRange.value,
-    inputAllpassLength.value,
-    inputAllpassGain.value,
-    inputAllpassDelayMin.value,
-    inputAllpassDelayRange.value,
-    inputAllpassMixStep.value
-  )
-  var earlyReflection = new EarlyReflection(
-    sampleRate,
-    inputERTaps.value,
-    inputERRange.value
-  )
-  var rnd = new Rnd(inputSeed.value)
-  for (var ch = 0; ch < wave.length; ++ch) {
-    earlyReflection.random(rnd)
-    earlyReflection.clearBuffer()
-    freeverb.random(rnd)
-    freeverb.clearBuffer()
-    for (var t = 0; t < sampleRate; ++t) {
-      wave[ch][t] = earlyReflection.process(wave[ch][t])
+  workers.forEach((value, index) => {
+    value.worker.onmessage = (event) => {
+      wave.data[index] = event.data
+      workers[index].isRunning = false
+      if (workers.every((v) => !v.isRunning)) {
+        if (checkboxTrim.value) {
+          wave.trim()
+        }
+        wave.declick(inputDeclickIn.value, inputDeclickOut.value)
+        if (checkboxNormalize.value) {
+          wave.normalize()
+        }
+        waveView.set(wave)
+      }
     }
-    for (var t = 0; t < wave[ch].length; ++t) {
-      var reverb = freeverb.process(wave[ch][t])
-      wave[ch][t] = reverb + inputERRatio.value * (wave[ch][t] - reverb)
-    }
-  }
-
-  return wave
+  })
 }
 
 class WaveViewMulti {
@@ -127,30 +129,7 @@ class WaveViewMulti {
 }
 
 function refresh() {
-  var channel = wave.channels
-
-  if (checkboxResample.value) {
-    var raw = makeWave(inputLength.value, renderParameters.sampleRate, channel)
-    for (var ch = 0; ch < raw.length; ++ch) {
-      wave.data[ch] = Resampler.pass(
-        raw[ch],
-        renderParameters.sampleRate,
-        audioContext.sampleRate
-      )
-    }
-  }
-  else {
-    wave.data = makeWave(inputLength.value, audioContext.sampleRate, channel)
-  }
-
-  if (checkboxTrim.value) {
-    wave.trim()
-  }
-  wave.declick(inputDeclickIn.value, inputDeclickOut.value)
-  if (checkboxNormalize.value) {
-    wave.normalize()
-  }
-  waveView.set(wave)
+  makeWave()
 }
 
 function random() {
@@ -178,6 +157,13 @@ var audioContext = new AudioContext()
 var renderParameters = new RenderParameters(audioContext, 16)
 
 var wave = new Wave(2)
+var workers = []
+for (var ch = 0; ch < wave.channels; ++ch) {
+  workers.push({
+    worker: new Worker("renderer.js"),
+    isRunning: true,
+  })
+}
 
 var divMain = new Div(document.body, "main")
 var headingTitle = new Heading(divMain.element, 1, document.title)
@@ -198,7 +184,7 @@ var buttonRandom = new Button(divRenderControls.element, "Random",
   () => random())
 var pullDownMenuRandomType = new PullDownMenu(divRenderControls.element, null,
   () => { })
-pullDownMenuRandomType.add("None")
+pullDownMenuRandomType.add("All")
 var checkboxQuickSave = new Checkbox(divRenderControls.element, "QuickSave",
   false, (checked) => { })
 
@@ -214,12 +200,7 @@ var inputDeclickOut = new NumberInput(divMiscControls.element, "Declick Out",
 var checkboxNormalize = new Checkbox(divMiscControls.element, "Normalize",
   true, refresh)
 var checkboxResample = new Checkbox(divMiscControls.element, "16x Sampling",
-  false, (checked) => {
-    renderParameters.overSampling = checked ? 16 : 1
-    refresh()
-    play(audioContext, wave)
-  }
-)
+  false, refresh)
 var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
   false, refresh)
 
