@@ -315,19 +315,23 @@ class Freeverb {
 }
 
 class EarlyReflection {
-  constructor(sampleRate, taps) {
+  constructor(sampleRate, taps, range) {
     this.delay = []
-    this.gain = []
+    this.range = range
+
+    var denom = taps * 2
     for (var i = 0; i < taps; ++i) {
-      this.delay.push(new Delay(sampleRate, Math.random() * 0.1))
-      this.gain.push(Math.pow(Math.random(), i))
+      this.delay.push(new Allpass(
+        sampleRate,
+        0.0001 + Math.random() * this.range,
+        (i + 1) / denom
+      ))
     }
   }
 
   random(rnd) {
     for (var i = 0; i < this.delay.length; ++i) {
-      this.delay[i].time = rnd.random() * 0.1
-      this.gain[i] = Math.pow(rnd.random(), i)
+      this.delay[i].time = 0.001 + rnd.random() * this.range
     }
   }
 
@@ -338,7 +342,7 @@ class EarlyReflection {
   process(input) {
     var mix = input
     for (var i = 0; i < this.delay.length; ++i) {
-      input = this.gain[i] * this.delay[i].process(input)
+      input = this.delay[i].process(input)
       mix += input
     }
     return mix

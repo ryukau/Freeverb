@@ -91,7 +91,8 @@ function makeWave(length, sampleRate, channel) {
   ))
   var earlyReflection = new EarlyReflection(
     sampleRate,
-    inputERTaps.value
+    inputERTaps.value,
+    inputERRange.value
   )
   var rnd = new Rnd(inputSeed.value)
   for (var ch = 0; ch < wave.length; ++ch) {
@@ -102,6 +103,8 @@ function makeWave(length, sampleRate, channel) {
       freeverb[i].clearBuffer()
     }
     for (var t = 0; t < wave[ch].length; ++t) {
+      // wave[ch][t] = earlyReflection.process(wave[ch][t])
+      // var input = wave[ch][t]
       var input = earlyReflection.process(wave[ch][t])
       wave[ch][t] = freeverb[0].process(input)
       for (var i = 1; i < freeverb.length; ++i) {
@@ -227,6 +230,8 @@ var divReverbControls = new Div(divMain.element, "MiscControls")
 var headingRender = new Heading(divReverbControls.element, 6, "Reverb")
 var inputERTaps = new NumberInput(divReverbControls.element,
   "ER.Taps", 16, 0, 128, 1, refresh)
+var inputERRange = new NumberInput(divReverbControls.element,
+  "ER.Range", 0.002, 0.001, 0.1, 0.001, refresh)
 var inputDamp = new NumberInput(divReverbControls.element,
   "Damp", 0.2, 0, 0.999, 0.001, refresh)
 var inputRoomsize = new NumberInput(divReverbControls.element,
