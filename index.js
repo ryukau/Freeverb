@@ -74,6 +74,7 @@ function makeWave(length, sampleRate, channel) {
     wave[ch][0] = 1 // impulse
   }
 
+  // impulse -> *** early reflection *** -> freeverb。
   var freeverb = []
   freeverb.push(new Freeverb(
     sampleRate,
@@ -105,8 +106,23 @@ function makeWave(length, sampleRate, channel) {
   return wave
 }
 
+class WaveViewMulti {
+  constructor(parent, channels) {
+    this.waveView = []
+    for (var i = 0; i < channels; ++i) {
+      this.waveView.push(new WaveView(parent, 512, 256, wave.left, false))
+    }
+  }
+
+  set(wave) {
+    for (var ch = 0; ch < this.waveView.length; ++ch) {
+      this.waveView[ch].set(wave.data[ch])
+    }
+  }
+}
+
 function refresh() {
-  var channel = 2
+  var channel = wave.channels
 
   if (checkboxResample.value) {
     var raw = makeWave(inputLength.value, renderParameters.sampleRate, channel)
@@ -129,7 +145,7 @@ function refresh() {
   if (checkboxNormalize.value) {
     wave.normalize()
   }
-  waveView.set(wave.left)
+  waveView.set(wave)
 }
 
 function random() {
@@ -163,7 +179,7 @@ description.add("", "")
 
 var divWaveform = new Div(divMain.element, "waveform")
 var headingWaveform = new Heading(divWaveform.element, 6, "Waveform")
-var waveView = new WaveView(divWaveform.element, 512, 256, wave.left, false)
+var waveView = new WaveViewMulti(divWaveform.element, wave.channels)
 
 var divRenderControls = new Div(divMain.element, "renderControls")
 var buttonPlay = new Button(divRenderControls.element, "Play",
@@ -181,7 +197,7 @@ var checkboxQuickSave = new Checkbox(divRenderControls.element, "QuickSave",
 var divMiscControls = new Div(divMain.element, "MiscControls")
 var headingRender = new Heading(divMiscControls.element, 6, "Render Settings")
 var inputLength = new NumberInput(divMiscControls.element, "Length",
-  2, 0.02, 8, 0.02, (value) => { refresh() })
+  2, 0.02, 16, 0.01, (value) => { refresh() })
 var tenMilliSecond = audioContext.sampleRate / 100
 var inputDeclickIn = new NumberInput(divMiscControls.element, "Declick In",
   2, 0, tenMilliSecond, 1, refresh)
@@ -200,17 +216,17 @@ var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
   false, refresh)
 
 var inputDamp = new NumberInput(divMiscControls.element, "Damp",
-  0.2, 0, 1, 0.001, refresh)
+  0.2, 0, 0.999, 0.001, refresh)
 var inputRoomsize = new NumberInput(divMiscControls.element, "Roomsize",
   0.84, 0, 1, 0.001, refresh)
 var inputCombLength = new NumberInput(divMiscControls.element, "Comb",
-  8, 1, 256, 1, refresh)
+  8, 1, 128, 1, refresh)
 var inputCombDelayMin = new NumberInput(divMiscControls.element, "CombMin",
   0.005, 0.0001, 0.1, 0.0001, refresh)
 var inputCombDelayRange = new NumberInput(divMiscControls.element, "CombRange",
   0.025, 0.0001, 0.1, 0.0001, refresh)
 var inputAllpassLength = new NumberInput(divMiscControls.element, "Allpass",
-  4, 1, 256, 1, refresh)
+  4, 1, 128, 1, refresh)
 var inputAllpassGain = new NumberInput(divMiscControls.element, "AllpassGain",
   0.5, 0.01, 1, 0.01, refresh)
 var inputAllpassDelayMin = new NumberInput(divMiscControls.element, "AllpassMin",
