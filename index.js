@@ -93,6 +93,7 @@ function makeWave() {
       erTaps: inputERTaps.value,
       erRange: inputERRange.value,
       feedback: inputFeedback.value,
+      highpassCutoff: inputFeedbackHighpassCutoff.value,
       seed: inputSeed.value + inputSeed.max * ch,
     })
   }
@@ -136,7 +137,8 @@ function refresh() {
 }
 
 function random() {
-  inputFeedback.random()
+  // inputFeedback.random()
+  // inputFeedbackHighpassCutoff.random()
   inputDamp.random()
   inputRoomsize.random()
   inputCombLength.random()
@@ -221,7 +223,9 @@ var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
 var divReverbControls = new Div(divMain.element, "MiscControls")
 var headingRender = new Heading(divReverbControls.element, 6, "Reverb")
 var inputFeedback = new NumberInput(divReverbControls.element,
-  "Feedback", 0.00, 0, 0.06, 0.0001, refresh)
+  "Feedback", 0, 0, 0.06, 0.0001, refresh)
+var inputFeedbackHighpassCutoff = new NumberInput(divReverbControls.element,
+  "FB.Highpass", 0.25, 0, 1, 0.0001, refresh)
 var inputERRatio = new NumberInput(divReverbControls.element,
   "ER.Ratio", 2 / 3, 0, 1, 0.001, refresh)
 var inputERTaps = new NumberInput(divReverbControls.element,

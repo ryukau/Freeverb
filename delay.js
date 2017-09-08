@@ -168,6 +168,71 @@ class Comb {
   }
 }
 
+class OnePoleHighpass {
+  constructor(sampleRate, freq) {
+    this.sampleRate = sampleRate
+    this.cutoff = freq
+    this.z1 = 0
+  }
+
+  set cutoff(freq) {
+    this.b1 = -Math.exp(-2.0 * Math.PI * freq / this.sampleRate)
+    this.a0 = 1.0 - this.b1
+  }
+
+  process(input) {
+    this.z1 = input * this.a0 + this.z1 * this.b1
+    return this.z1
+  }
+}
+
+class StateVariableFilter {
+  // http://www.earlevel.com/main/2003/03/02/the-digital-state-variable-filter/
+  constructor(sampleRate) {
+    this.sampleRate = sampleRate
+    this.buffer = new Array(2).fill(0)
+
+    this.fc
+    this.cutoff = this.sampleRate / 2
+
+    this._q
+    this.q = 0.5
+  }
+
+  // cutoff の範囲は [0, 1]
+  set cutoff(value) {
+    value *= 0.5
+    var cutoff = value * value * value
+    this.fc = 2 * Math.sin(Math.PI * cutoff)
+    // this.fc = 2 * Math.sin(Math.PI * this._cutoff / this.sampleRate)
+  }
+
+  // 返ってくる q の範囲は [0.5, infinity]
+  get q() {
+    return 1 / this._q
+  }
+
+  // q の範囲は [0, 1]
+  set q(value) {
+    this._q = 2 - value * 2
+  }
+
+  process(input) {
+    var A = input - this.buffer[0] * this._q - this.buffer[1]
+    var B = A * this.fc + this.buffer[0]
+    var C = B * this.fc + this.buffer[1]
+
+    this.buffer[0] = B
+    this.buffer[1] = C
+
+    return { lowpass: C, highpass: A, bandpass: B, bandreject: A + C }
+  }
+
+  refresh() {
+    this.buffer.fill(0)
+  }
+}
+
 class LPComb {
   // https://ccrma.stanford.edu/~jos/pasp/Lowpass_Feedback_Comb_Filter.html
   // damp = 0.2
@@ -260,7 +325,8 @@ class Freeverb {
     apDelayMin,
     apDelayRange,
     apStep,
-    feedback
+    feedback,
+    hpCutoff
   ) {
     this.lpcomb = []
     this.damp = damp
@@ -272,6 +338,11 @@ class Freeverb {
     this.apStep = apStep
     this.feedback = feedback
 
+    this.highpass = []
+    for (var i = 0; i < 3; ++i) {
+      this.highpass.push(new StateVariableFilter(sampleRate))
+      this.highpass[i].cutoff = hpCutoff
+    }
     this.buf = 0 // for feedback.
 
     for (var i = 0; i < combLength; ++i) {
@@ -314,10 +385,17 @@ class Freeverb {
       output += this.lpcomb[i].process(input)
     }
     if (this.apStep < 2) {
-      this.buf = this.allpass.process(output)
+      output = this.allpass.process(output)
     }
-    this.buf = this.allpass.processMix(output, this.apStep)
-    return this.buf
+    output = this.allpass.processMix(output, this.apStep)
+    this.buf = output
+    if (this.feedback <= 0) {
+      return this.buf
+    }
+    for (var i = 0; i < this.highpass.length; ++i) {
+      this.buf = this.highpass[i].process(this.buf).highpass
+    }
+    return this.buf + output
   }
 }
 
