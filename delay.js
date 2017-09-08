@@ -24,7 +24,7 @@ class Impulse {
 class Delay {
   constructor(sampleRate, time) {
     this.sampleRate = sampleRate
-    this.buf = new Array(sampleRate * 5).fill(0)
+    this.buf = new Array(Math.floor(sampleRate / 8)).fill(0)
     this.wptr = 0
     this.time = time
   }
