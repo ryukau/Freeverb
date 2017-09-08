@@ -259,7 +259,8 @@ class Freeverb {
     apGain,
     apDelayMin,
     apDelayRange,
-    apStep
+    apStep,
+    feedback
   ) {
     this.lpcomb = []
     this.damp = damp
@@ -269,6 +270,9 @@ class Freeverb {
     this.apDelayMin = apDelayMin
     this.apDelayRange = apDelayRange
     this.apStep = apStep
+    this.feedback = feedback
+
+    this.buf = 0 // for feedback.
 
     for (var i = 0; i < combLength; ++i) {
       this.lpcomb.push(new LPComb(
@@ -298,19 +302,22 @@ class Freeverb {
   }
 
   clearBuffer() {
+    this.buf = 0
     this.lpcomb.forEach((v) => v.clearBuffer())
     this.allpass.clearBuffer()
   }
 
   process(input) {
     var output = 0
+    input += this.buf * this.feedback
     for (var i = 0; i < this.lpcomb.length; ++i) {
       output += this.lpcomb[i].process(input)
     }
     if (this.apStep < 2) {
-      return this.allpass.process(output)
+      this.buf = this.allpass.process(output)
     }
-    return this.allpass.processMix(output, this.apStep)
+    this.buf = this.allpass.processMix(output, this.apStep)
+    return this.buf
   }
 }
 

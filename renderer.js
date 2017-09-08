@@ -21,12 +21,13 @@ importScripts(
 //   erRatio,
 //   erTaps,
 //   erRange,
+//   feedback,
 //   seed
 // }
 
 onmessage = (event) => {
   var params = event.data
-  // console.log(params)
+  console.log(params)
 
   var sampleRate = params.sampleRate * params.overSampling
   var waveLength = Math.floor(sampleRate * params.length)
@@ -43,7 +44,8 @@ onmessage = (event) => {
     params.allpassGain,
     params.allpassDelayMin,
     params.allpassDelayRange,
-    params.allpassMixStepe
+    params.allpassMixStepe,
+    params.feedback
   )
   var earlyReflection = new EarlyReflection(
     sampleRate,
