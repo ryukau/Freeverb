@@ -221,7 +221,7 @@ var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
   false, refresh)
 
 var divReverbControls = new Div(divMain.element, "MiscControls")
-var headingRender = new Heading(divReverbControls.element, 6, "Reverb")
+var headingReverb = new Heading(divReverbControls.element, 6, "Reverb")
 var inputFeedback = new NumberInput(divReverbControls.element,
   "Feedback", 0, 0, 0.06, 0.0001, refresh)
 var inputFeedbackHighpassCutoff = new NumberInput(divReverbControls.element,
