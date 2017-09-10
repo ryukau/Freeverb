@@ -21,10 +21,6 @@ class RenderParameters {
 }
 
 function play(audioContext, wave) {
-  if (checkboxQuickSave.value) {
-    save(wave)
-  }
-
   var channel = wave.channels
   var frame = wave.frames
   var buffer = audioContext.createBuffer(channel, frame, audioContext.sampleRate)
@@ -111,6 +107,11 @@ function makeWave() {
           wave.normalize()
         }
         waveView.set(wave)
+
+        if (checkboxQuickSave.value) {
+          save(wave)
+        }
+
         headingRenderStatus.element.textContent = "Rendering finished. ✓"
       }
     }
@@ -194,13 +195,13 @@ var headingRenderStatus = new Heading(divRenderControls.element, 4,
   "Rendering status will be displayed here.")
 var buttonPlay = new Button(divRenderControls.element, "Play",
   () => play(audioContext, wave))
-var buttonSave = new Button(divRenderControls.element, "Save",
-  () => save(wave))
 var buttonRandom = new Button(divRenderControls.element, "Random",
   () => random())
 var pullDownMenuRandomType = new PullDownMenu(divRenderControls.element, null,
   () => { })
 pullDownMenuRandomType.add("All")
+var buttonSave = new Button(divRenderControls.element, "Save",
+  () => save(wave))
 var checkboxQuickSave = new Checkbox(divRenderControls.element, "QuickSave",
   false, (checked) => { })
 
