@@ -384,6 +384,7 @@ class Freeverb {
     for (var i = 0; i < this.lpcomb.length; ++i) {
       output += this.lpcomb[i].process(input)
     }
+    output /= this.lpcomb.length
     if (this.apStep < 2) {
       output = this.allpass.process(output)
     }

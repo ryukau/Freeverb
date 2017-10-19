@@ -225,11 +225,11 @@ var checkboxTrim = new Checkbox(divMiscControls.element, "Trim",
 var divReverbControls = new Div(divMain.element, "MiscControls")
 var headingReverb = new Heading(divReverbControls.element, 6, "Reverb")
 var inputFeedback = new NumberInput(divReverbControls.element,
-  "Feedback", 0, 0, 0.06, 0.0001, refresh)
+  "Feedback", 0, 0, 1.0, 0.0001, refresh)
 var inputFeedbackHighpassCutoff = new NumberInput(divReverbControls.element,
   "FB.Highpass", 0.25, 0, 1, 0.0001, refresh)
 var inputERRatio = new NumberInput(divReverbControls.element,
-  "ER.Ratio", 2 / 3, 0, 1, 0.001, refresh)
+  "ER.Ratio", 0.2, 0, 1, 0.001, refresh)
 var inputERTaps = new NumberInput(divReverbControls.element,
   "ER.Taps", 16, 0, 128, 1, refresh)
 var inputERRange = new NumberInput(divReverbControls.element,
@@ -247,7 +247,7 @@ var inputCombDelayRange = new NumberInput(divReverbControls.element,
 var inputAllpassLength = new NumberInput(divReverbControls.element,
   "Allpass", 4, 1, 128, 1, refresh)
 var inputAllpassGain = new NumberInput(divReverbControls.element,
-  "AllpassGain", 0.5, 0.01, 1, 0.01, refresh)
+  "AllpassGain", 0.5, 0.01, 1, 0.001, refresh)
 var inputAllpassDelayMin = new NumberInput(divReverbControls.element,
   "AllpassMin", 0.005, 0.0001, 0.1, 0.0001, refresh)
 var inputAllpassDelayRange = new NumberInput(divReverbControls.element,
